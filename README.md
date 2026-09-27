@@ -152,7 +152,11 @@ $$
 y_t = H x_t + v_t, \quad v_t \sim \mathcal{N}(0, R)
 $$
 
-Where state $x_t = [\mu_t, \beta_t]^T$ represents unobserved local level and drift, $F = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}$, and $H = \begin{bmatrix} 1 & 0 \end{bmatrix}$.
+Where the state vector $x_t = [\mu_t, \beta_t]^T$ represents the unobserved local level $\mu_t$ and drift $\beta_t$, governed by transition matrix $F$ and observation matrix $H$:
+
+$$
+F = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}, \quad H = \begin{bmatrix} 1 & 0 \end{bmatrix}
+$$
 
 - **Dropout Imputation**: If an API outage occurs or $y_t = 0$, the Kalman gain $K_t$ is set to $0$, projecting the hidden state purely via system dynamics.
 - **Analytical 90-Day Forecast**: Forward extrapolation with calibrated 95% analytical prediction bounds:
