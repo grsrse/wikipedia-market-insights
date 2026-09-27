@@ -15,7 +15,7 @@ It queries official Wikimedia Analytics Query Service (AQS) and MediaWiki APIs t
 
 The package follows the **Frozen Agent Skill Specification** (`agentskills.io`). Downstream agents interact exclusively via deterministic CLI commands; no runtime code modification or monkey-patching is permitted.
 
-```
+```text
 wikipedia-market-insights/
 ├── SKILL.md              # Compact agent instruction sheet & execution scenarios (< 500 lines)
 ├── README.md             # Technical developer & architecture reference
@@ -162,7 +162,7 @@ $$\text{Rank Score} = 0.50 \cdot \frac{TS_L}{\max(TS)} + 0.30 \cdot \frac{\max(0
 
 To eliminate the common LLM bias of blindly validating user hypotheses, the skill executes an uncompromised **Council of Rivals** evaluating 3 adversarial perspectives:
 
-```
+```text
                          ┌─────────────────────────────┐
                          │   Topic Data & Analytics    │
                          └──────────────┬──────────────┘
