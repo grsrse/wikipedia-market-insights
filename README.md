@@ -53,16 +53,31 @@ wikipedia-market-insights/
 
 ### 2.1. Growth Formulations
 
-1. **Year-over-Year (YoY) Growth**:
-   $$\text{YoY Growth \%} = \left(\frac{V_{\text{recent}} - V_{\text{prior}}}{V_{\text{prior}}}\right) \times 100$$
-   *Where $V_{\text{recent}}$ is the sum of views across the most recent 365 days, and $V_{\text{prior}}$ is the preceding 365 days.*
+#### Year-over-Year (YoY) Growth
 
-2. **Baseline Organic Growth**:
-   $$\text{Baseline Growth \%} = \left(\frac{\text{Median}(V_{\text{last } 60}) - \text{Median}(V_{\text{first } 60})}{\text{Median}(V_{\text{first } 60})}\right) \times 100$$
-   *Compares the 60-day moving median between window endpoints to immunize the growth trajectory against isolated news spikes.*
+$$
+\text{YoY Growth} = \left(\frac{V_{\text{recent}} - V_{\text{prior}}}{V_{\text{prior}}}\right) \times 100
+$$
 
-3. **Compound Annual Growth Rate (CAGR)** (for periods $T \ge 1.0$ years):
-   $$\text{CAGR} = \left(\frac{\text{Median}(V_{\text{last } 60})}{\text{Median}(V_{\text{first } 60})}\right)^{\frac{1}{T}} - 1$$
+Where:
+- $V_{\text{recent}}$ is the total pageviews across the most recent 365 days.
+- $V_{\text{prior}}$ is the total pageviews across the preceding 365 days.
+
+#### Baseline Organic Growth
+
+$$
+\text{Baseline Growth} = \left(\frac{\text{Median}(V_{\text{last } 60}) - \text{Median}(V_{\text{first } 60})}{\text{Median}(V_{\text{first } 60})}\right) \times 100
+$$
+
+Compares the 60-day moving median between window endpoints to immunize the growth trajectory against isolated news spikes.
+
+#### Compound Annual Growth Rate (CAGR)
+
+For observation periods $T \ge 1.0$ years:
+
+$$
+\text{CAGR} = \left(\frac{\text{Median}(V_{\text{last } 60})}{\text{Median}(V_{\text{first } 60})}\right)^{\frac{1}{T}} - 1
+$$
 
 ---
 
@@ -70,16 +85,35 @@ wikipedia-market-insights/
 
 Traditional standard deviation $\sigma$ is severely inflated by large viral spikes ($O(n)$ sensitivity). The skill employs a non-parametric **Hampel-type Median Absolute Deviation (MAD)** filter:
 
-1. **30-Day Moving Baseline**:
-   $$M_t = \text{Median}(V_{t-15}, \dots, V_{t+15})$$
-2. **Absolute Residuals & Scale Consistency**:
-   $$R_t = |V_t - M_t|, \quad \text{MAD} = \text{Median}(R)$$
-   $$\hat{\sigma}_{\text{robust}} = 1.4826 \times \text{MAD}$$
-   *The factor $1.4826 = \frac{1}{\Phi^{-1}(0.75)}$ ensures asymptotic consistency with standard deviation under a Gaussian null.*
-3. **Dynamic Anomaly Threshold**:
-   $$\text{Threshold}_t = M_t + 2.5 \times \hat{\sigma}_{\text{robust}}$$
-4. **Spike Impact Ratio**:
-   $$\text{Spike Volume Ratio} = \frac{\sum_{t \in \text{Spikes}} (V_t - M_t)}{\sum_t V_t}$$
+#### 1. 30-Day Moving Baseline
+
+$$
+M_t = \text{Median}(V_{t-15}, \dots, V_{t+15})
+$$
+
+#### 2. Absolute Residuals & Scale Consistency
+
+$$
+R_t = |V_t - M_t|, \quad \text{MAD} = \text{Median}(R)
+$$
+
+$$
+\hat{\sigma}_{\text{robust}} = 1.4826 \times \text{MAD}
+$$
+
+The factor $1.4826 = \frac{1}{\Phi^{-1}(0.75)}$ ensures asymptotic consistency with standard deviation under a Gaussian null.
+
+#### 3. Dynamic Anomaly Threshold
+
+$$
+\text{Threshold}_t = M_t + 2.5 \times \hat{\sigma}_{\text{robust}}
+$$
+
+#### 4. Spike Impact Ratio
+
+$$
+\text{Spike Volume Ratio} = \frac{\sum_{t \in \text{Spikes}} (V_t - M_t)}{\sum_t V_t}
+$$
 
 ---
 
@@ -87,16 +121,19 @@ Traditional standard deviation $\sigma$ is severely inflated by large viral spik
 
 Evaluates whether observed reader curiosity represents sustained, investable intent:
 
-$$\text{Trust Score} = S_{\text{trend}} + S_{\text{spike}} + S_{\text{consistency}} + S_{\text{longevity}}$$
+$$
+\text{Trust Score} = S_{\text{trend}} + S_{\text{spike}} + S_{\text{consistency}} + S_{\text{longevity}}
+$$
 
 | Sub-metric | Range | Mathematical Derivation | Architectural Purpose |
 | :--- | :--- | :--- | :--- |
-| **$S_{\text{trend}}$ (Baseline Growth)** | $0 - 40$ pts | Piecewise linear mapping of $\text{Baseline Growth \%}$ ($+50\% \to 40$ pts; $+20\% \to 30$ pts; $0\% \to 20$ pts; $<-50\% \to 0$ pts). | Rewards sustained expansion of core audience. |
-| **$S_{\text{spike}}$ (Hype Resilience)** | $0 - 35$ pts | $35 \times \max\left(0, 1.0 - 1.5 \times \text{Spike Volume Ratio}\right)$. | Heavily penalizes trends driven by transient press coverage. |
+| **$S_{\text{trend}}$ (Baseline Growth)** | $0 - 40$ pts | Piecewise linear mapping of Baseline Growth (+50% $\to$ 40 pts; +20% $\to$ 30 pts; 0% $\to$ 20 pts; <-50% $\to$ 0 pts). | Rewards sustained expansion of core audience. |
+| **$S_{\text{spike}}$ (Hype Resilience)** | $0 - 35$ pts | $35 \times \max(0, 1.0 - 1.5 \times \text{Spike Volume Ratio})$. | Heavily penalizes trends driven by transient press coverage. |
 | **$S_{\text{consistency}}$ (Variance)** | $0 - 15$ pts | Tiered via Coefficient of Variation $CV = \frac{\sigma}{\mu}$ ($CV < 0.6 \to 15$ pts; $CV < 1.0 \to 10$ pts; $CV < 1.8 \to 5$ pts). | Rewards smooth, predictable daily engagement. |
 | **$S_{\text{longevity}}$ (Depth)** | $0 - 10$ pts | Step function on historical observation days ($\ge 700\text{d} \to 10$ pts; $\ge 365\text{d} \to 8$ pts; $\ge 180\text{d} \to 5$ pts). | Penalizes newly created articles with unproven longevity. |
 
 **Classification Verdicts**:
+
 - **$\ge 75$ — High Confidence**: Organic, sustainable market interest. Low launch risk.
 - **$50 - 74$ — Moderate Confidence**: Steady core demand with minor seasonal/event volatility.
 - **$< 50$ — Fragile / News-Driven Spike**: High risk. Growth was propelled by transient viral events.
@@ -107,22 +144,31 @@ $$\text{Trust Score} = S_{\text{trend}} + S_{\text{spike}} + S_{\text{consistenc
 
 Rather than heavy, non-converging ARIMA/SARIMA models, the skill employs a linear Gaussian state-space model:
 
-$$\text{State Transition: } x_t = F x_{t-1} + w_t, \quad w_t \sim \mathcal{N}(0, Q)$$
-$$\text{Observation: } y_t = H x_t + v_t, \quad v_t \sim \mathcal{N}(0, R)$$
+$$
+x_t = F x_{t-1} + w_t, \quad w_t \sim \mathcal{N}(0, Q)
+$$
+
+$$
+y_t = H x_t + v_t, \quad v_t \sim \mathcal{N}(0, R)
+$$
 
 Where state $x_t = [\mu_t, \beta_t]^T$ represents unobserved local level and drift, $F = \begin{bmatrix} 1 & 1 \\ 0 & 1 \end{bmatrix}$, and $H = \begin{bmatrix} 1 & 0 \end{bmatrix}$.
 
 - **Dropout Imputation**: If an API outage occurs or $y_t = 0$, the Kalman gain $K_t$ is set to $0$, projecting the hidden state purely via system dynamics.
-- **Analytical 90-Day Forecast**: Forward extrapolation with calibrated $95\%$ analytical prediction bounds:
-  $$\hat{y}_{t+h} = H F^h x_t \pm 1.96 \sqrt{H P_{t+h|t} H^T + R}$$
+- **Analytical 90-Day Forecast**: Forward extrapolation with calibrated 95% analytical prediction bounds:
+
+$$
+\hat{y}_{t+h} = H F^h x_t \pm 1.96 \sqrt{H P_{t+h|t} H^T + R}
+$$
 
 ---
 
 ### 2.5. Non-Parametric Bootstrap Confidence Intervals (Tibshirani / Efron)
 
 To quantify statistical uncertainty in the Trust Score without parametric assumptions:
+
 - Resamples the residual distribution $e_t = V_t - M_t$ with replacement across $B = 250$ replications.
-- Re-evaluates Trust Score across bootstrap datasets to output empirical percentiles $[TS_{2.5\%}, TS_{97.5\%}]$.
+- Re-evaluates Trust Score across bootstrap datasets to output empirical 95% confidence intervals $[TS_{\text{low}}, TS_{\text{high}}]$ (representing the 2.5th and 97.5th percentiles).
 
 ---
 
@@ -130,11 +176,17 @@ To quantify statistical uncertainty in the Trust Score without parametric assump
 
 To prevent large linguistic editions (e.g. `en.wikipedia` or `de.wikipedia`) from overshadowing high-intent niche regions (e.g. `pl` or `cs`), views are normalized per 1,000,000 total project pageviews:
 
-$$\text{Normalized Density} = \frac{\text{Topic Pageviews in Lang } L}{\text{Total Project Pageviews of } L\text{.wikipedia.org}} \times 1,000,000$$
+$$
+\text{Normalized Density} = \frac{\text{Topic Pageviews in Lang } L}{\text{Total Project Pageviews of } L\text{.wikipedia.org}} \times 1,000,000
+$$
 
 **Multi-Criteria Market Ranking**:
-$$\text{Rank Score} = 0.50 \cdot \frac{TS_L}{\max(TS)} + 0.30 \cdot \frac{\max(0, YoY_L)}{\max(YoY)} + 0.20 \cdot \frac{\text{NormDens}_L}{\max(\text{NormDens})}$$
-*All vectors are scaled to $[0, 1]$ across the active market cohort to guarantee balanced decision-making.*
+
+$$
+\text{Rank Score} = 0.50 \cdot \frac{TS_L}{\max(TS)} + 0.30 \cdot \frac{\max(0, YoY_L)}{\max(YoY)} + 0.20 \cdot \frac{\text{NormDens}_L}{\max(\text{NormDens})}
+$$
+
+All vectors are scaled to $[0, 1]$ across the active market cohort to guarantee balanced decision-making.
 
 ---
 
